@@ -3,6 +3,52 @@
 
 <g:set var="shipper" value="${shippers && shippers[0] ? shippers[0] : null}" />
 
+<script type="text/javascript">
+    saveFedexConfiguration=function(btn){
+        $(btn).ladda().ladda("start");
+
+        var fedexClientCode=$("#fedexSenderAccId").val();
+        var fedexApiKey=$("#fedexUser").val();
+        var fedexSecretKey=$("#fedexPassword").val();
+
+        if($("#dhlform").valid() ){
+            $.ajax({
+                url: "${createLink(controller: 'shipper', action:'save' )}",
+                data: {
+                    id:idfedex,
+                    type:30,
+                    name: "FEDEX",
+                    virtualShipperType: virtualShipperType,
+                    title: title,
+                    'fedexUserConfiguration.senderAccId':fedexClientCode,
+                    'fedexUserConfiguration.user':fedexApiKey,
+                    'fedexUserConfiguration.password': fedexSecretKey,
+                    storeID:${session['store_id']} },
+                method: 'POST',
+                beforeSend: function(data){
+
+                },
+                success: function(data){
+
+                    $("#validfedex").val(data);
+
+                    swal({title:"Salvataggio", text:"Modifiche verificate e salvate con successo", type:"success"},function(){
+                        showTemplate("carriers","fedex");
+                        $('#configuration-fedex>img').removeClass("grayscale")
+                        window["js-switch-sm-FEDEXdefault" ].enable();
+                    });
+                },
+                error: function(xhr,status,error){
+                    swal("Ops", xhr.responseText, "error")
+
+                },
+                complete: function(xhr,status,error){
+                    $(btn).ladda("stop");
+                }
+            });
+        }
+    }
+</script>
 
 <div class="ibox" style="width: 100%">
     <div class="ibox-content">
@@ -54,7 +100,7 @@
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.senderAccId')}</h3>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <input type="text" name="fedexsenderAccId" id="fedexsenderAccId" class="form-control"  value="${shipper?.account_id}"  required="" >
+                                        <input type="text" name="fedexSenderAccId" id="fedexSenderAccId" class="form-control"  value="${shipper?.account_id}"  required="" >
                                         <span class="input-group-addon">
                                             <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="right" title="Codice cliente"></i>
                                         </span>
@@ -67,7 +113,7 @@
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.user')}</h3>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input type="text" name="fedexUserConfiguration.user" id="fedexuser" class="form-control" required="required" value="${shipper?.seatCode}" required="" >
+                                    <input type="text" name="fedexUser" id="fedexUser" class="form-control" required="required" value="${shipper?.seatCode}" required="" >
                                 </div>
                             </div>
                         </div>
@@ -77,7 +123,7 @@
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.password')}</h3>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input type="text" name="fedexUserConfiguration.password" id="fedexpassword" class="form-control" required="required" value="${shipper?.username}"  required="" >
+                                    <input type="text" name="fedexPassword" id="fedexPassword" class="form-control" required="required" value="${shipper?.username}"  required="" >
                                 </div>
                             </div>
                         </div>
@@ -138,7 +184,7 @@
 
                     <div class="row">
                         <div class="col-sm-12">
-                            <button class="btn btn-primary pull-right ladda-button" data-style="expand-left" id="fedexsave" onclick="savefedex(this)" style="margin:5px;">Salva</button>
+                            <button class="btn btn-primary pull-right ladda-button" data-style="expand-left" id="fedexsave" onclick="saveFedexConfiguration(this)" style="margin:5px;">Salva</button>
                         </div>
                     </div>
                     <div class="row m-b" style="margin-top:15px;">
