@@ -228,6 +228,7 @@ class ShipperController {
 
         Boolean validConf
         try{
+            log.debug("TEST PROVA")
             validConf = shipperService.verifyConfiguration(type, params as GrailsParameterMap)
         }
         catch(Exception e) {

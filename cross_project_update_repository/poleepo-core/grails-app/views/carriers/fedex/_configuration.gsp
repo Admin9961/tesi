@@ -5,15 +5,21 @@
 
 <script type="text/javascript">
     saveFedexConfiguration=function(btn){
+        debugger
+        debugger
+        var idfedex=$("#validfedex").val();
         $(btn).ladda().ladda("start");
 
         var fedexClientCode=$("#fedexSenderAccId").val();
         var fedexApiKey=$("#fedexUser").val();
         var fedexSecretKey=$("#fedexPassword").val();
+        var virtualShipperType = $('#virtualShipperType').val();
+        var title = $('#title').val();
 
-        if($("#dhlform").valid() ){
+        if($("#fedexform").valid() ){
             $.ajax({
                 url: "${createLink(controller: 'shipper', action:'save' )}",
+                method: 'POST',
                 data: {
                     id:idfedex,
                     type:30,
@@ -23,10 +29,7 @@
                     'fedexUserConfiguration.senderAccId':fedexClientCode,
                     'fedexUserConfiguration.user':fedexApiKey,
                     'fedexUserConfiguration.password': fedexSecretKey,
-                    storeID:${session['store_id']} },
-                method: 'POST',
-                beforeSend: function(data){
-
+                    storeID:${session['store_id']}
                 },
                 success: function(data){
 

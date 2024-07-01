@@ -1,0 +1,66 @@
+# configurazione di spring
+spring:
+    # configurazione dell'applicazione'
+    application:
+        name: notification-service
+    profiles:
+        active: dev                                 # in produzione settare prod
+
+    # configurazione di hibernate
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+    # configurazione della connessione al database
+    datasource:
+        url: jdbc:mysql://10.97.176.21:3306/PLP_STAGE_NOTIFICATION?useSSL=false
+        username: poleepo
+        password: PHaogsojsDqvlbCD
+#        url: jdbc:mysql://localhost:3306/notification-service?useSSL=false
+#        username: WSMUN
+#        password: WSMPW2016
+        driver-class-name: com.mysql.jdbc.Driver
+
+    # configurazione di jackson
+    jackson:
+        date-format: yyyy-MM-dd HH:mm:ss
+
+# configurazione del server
+server:
+    port: 8093
+    servlet:
+        context-path: /${spring.application.name}
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health, metrics, prometheus, info
+
+    info:
+        env:
+            enabled: true
+
+    metrics:
+        enable:
+            jvm: true
+            all: true
+        tags:
+            application: ${spring.application.name}
+
+# configurazioni del servizio
+notification:
+    node: 1
+    log:
+        base-dir: ./
+
+# configurazione Logger
+#logging:
+#    level:
+#        org:
+#            hibernate:
+#                SQL: DEBUG
+#                type:
+#                    descriptor:
+#                        sql:
+#                            BasicBinder: TRACE
