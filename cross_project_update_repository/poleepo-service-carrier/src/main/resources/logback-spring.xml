@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="service_node" source="service-node" defaultValue="0"/>
+    <springProperty scope="context" name="service_log_path" source="logging.file" defaultValue="./"/>
+
+    <!-- Configurazione del logger per la produzione -->
+    <springProfile name="prod">
+        <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <Pattern>
+                    %date{dd MMM yyyy HH:mm:ss.SSS} [%t] %-5p %c{0} - [%X{tid}] - [%X{txid}] - %m%n
+                </Pattern>
+            </layout>
+        </appender>
+
+        <!-- LOG base a ERROR -->
+        <root level="error" additivity="false">
+            <appender-ref ref="Console" />
+        </root>
+
+        <!-- LOG del progetto -->
+        <logger name="com.macrosolution.mpm" level="info" additivity="false">
+            <appender-ref ref="Console" />
+        </logger>
+    </springProfile>
+
+    <!-- Configurazione del logger per lo sviluppo -->
+    <springProfile name="!prod">
+        <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <Pattern>
+                    %date{yyyy-MM-dd} | %date{HH:mm:ss.SSS} | %yellow(%X{txid}) | %highlight(%-5level) |  %cyan(%logger{0}) : %m%n
+                </Pattern>
+            </layout>
+        </appender>
+
+        <!-- LOG base a INFO -->
+        <root level="info" additivity="false">
+            <appender-ref ref="Console" />
+        </root>
+
+        <!-- LOG of Hibernate -->
+        <logger name="org.hibernate.SQL" level="debug" additivity="false">
+            <appender-ref ref="Console" />
+        </logger>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="trace" additivity="false">
+            <appender-ref ref="Console" />
+        </logger>
+
+        <!-- LOG del progetto -->
+        <logger name="com.macrosolution.mpm" level="debug" additivity="false">
+            <appender-ref ref="Console" />
+        </logger>
+        <logger name="org.apache.commons.net.ftp" level="debug" additivity="false">
+            <appender-ref ref="Console" />
+        </logger>
+    </springProfile>
+</configuration>

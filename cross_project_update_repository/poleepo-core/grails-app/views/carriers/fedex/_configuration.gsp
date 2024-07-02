@@ -4,13 +4,14 @@
 <g:set var="shipper" value="${shippers && shippers[0] ? shippers[0] : null}" />
 
 <script type="text/javascript">
-    saveFedexConfiguration=function(btn){
-        debugger
-        debugger
+
+    // Prodecura di inserimento di una nuova configurazione
+    newFedexConfiguration=function(btn){
         var idfedex=$("#validfedex").val();
         $(btn).ladda().ladda("start");
 
-        var fedexClientCode=$("#fedexSenderAccId").val();
+        // anche per brt, il codice cliente sarebbe il 'customer'
+        var fedexClientCode=$("#fedexCustomer").val();
         var fedexApiKey=$("#fedexUser").val();
         var fedexSecretKey=$("#fedexPassword").val();
         var virtualShipperType = $('#virtualShipperType').val();
@@ -26,7 +27,7 @@
                     name: "FEDEX",
                     virtualShipperType: virtualShipperType,
                     title: title,
-                    'fedexUserConfiguration.senderAccId':fedexClientCode,
+                    'fedexUserConfiguration.customer':fedexClientCode,
                     'fedexUserConfiguration.user':fedexApiKey,
                     'fedexUserConfiguration.password': fedexSecretKey,
                     storeID:${session['store_id']}
@@ -36,14 +37,14 @@
                     $("#validfedex").val(data);
 
                     swal({title:"Salvataggio", text:"Modifiche verificate e salvate con successo", type:"success"},function(){
-                        showTemplate("carriers","fedex");
-                        $('#configuration-fedex>img').removeClass("grayscale")
-                        window["js-switch-sm-FEDEXdefault" ].enable();
+                        showTemplate('carriers', 'fedex');
+                        $('#configuration-sda>img').removeClass("grayscale")
+                        window["js-switch-sm-fedexdefault" ].enable();
                     });
                 },
                 error: function(xhr,status,error){
                     swal("Ops", xhr.responseText, "error")
-
+                    $("#enabledfafedex").html('<a data-toggle="tooltip" class="checkfav" data-placement="left" title="Corriere non configurato"><i class="fa fa-check" style="color: red;"></i></a>');
                 },
                 complete: function(xhr,status,error){
                     $(btn).ladda("stop");
@@ -51,6 +52,78 @@
             });
         }
     }
+
+    // Prcedura di salvataggio generico della configurazione
+    // Stabiliamo se dobbiamo aggiornare o inserire una nuova config del corriere
+    saveFedexConfiguration = function(btn) {
+
+        debugger
+        debugger
+        if(!$('#fedexform').valid())
+            return;
+
+        var idfedex=$("#validfedex").val();
+
+        // Se id = 0 dobbiamo creare un nuova configurazione
+        // TODO: qua idfedex è sempre zero e crea ogni volta una nuova confgurazione, trovare problema
+        // TODO: potrebbe ssere perchè nel db non viene salvato shipper_type
+        if(idfedex == 0){
+            debugger
+            debugger
+            newFedexConfiguration(btn);
+
+        // Altrimenti aggiorniamo la configurazione
+        } else {
+
+            debugger
+            debugger
+            $(btn).ladda().ladda("start");
+            // anche per brt, il codice cliente sarebbe il 'customer'
+            var fedexClientCode=$("#fedexCustomer").val();
+            var fedexApiKey=$("#fedexUser").val();
+            var fedexSecretKey=$("#fedexPassword").val();
+            var virtualShipperType = $('#virtualShipperType').val();
+            var title = $('#title').val();
+
+            if($("#fedexform").valid() ){
+                $.ajax({
+                    url: "${createLink(controller: 'shipper', action:'update' )}",
+                    method: 'POST',
+                    data: {
+                        id:idfedex,
+                        type:30,
+                        name: "FEDEX",
+                        virtualShipperType: virtualShipperType,
+                        title: title,
+                        'fedexUserConfiguration.customer':fedexClientCode,
+                        'fedexUserConfiguration.user':fedexApiKey,
+                        'fedexUserConfiguration.password': fedexSecretKey,
+                        storeID:${session['store_id']}
+                    },
+                    success: function(data){
+
+                        $("#validfedex").val(data);
+
+                        swal({title:"Salvataggio", text:"Modifiche verificate e salvate con successo", type:"success"},function(){
+                            showTemplate('carriers', 'fedex');
+                            $('#configuration-sda>img').removeClass("grayscale")
+                            window["js-switch-sm-fedexdefault" ].enable();
+                        });
+                    },
+                    error: function(xhr,status,error){
+                        swal("Ops", xhr.responseText, "error")
+                        $("#enabledfafedex").html('<a data-toggle="tooltip" class="checkfav" data-placement="left" title="Corriere non configurato"><i class="fa fa-check" style="color: red;"></i></a>');
+                    },
+                    complete: function(xhr,status,error){
+                        $(btn).ladda("stop");
+                    }
+                });
+            }
+        }
+    }
+
+
+
 </script>
 
 <div class="ibox" style="width: 100%">
@@ -100,10 +173,10 @@
                             <input type="hidden" name="title" id="title" value="${shipper?.title ?: ShipperType.FEDEX}">
 
                             <!-- Codice Cliente: senderAccID -->
-                            <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.senderAccId')}</h3>
+                            <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.customer')}</h3>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <input type="text" name="fedexSenderAccId" id="fedexSenderAccId" class="form-control"  value="${shipper?.account_id}"  required="" >
+                                        <input type="text" name="fedexCustomer" id="fedexCustomer" class="form-control"  value="${shipper?.account_id}"  required="" >
                                         <span class="input-group-addon">
                                             <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="right" title="Codice cliente"></i>
                                         </span>
