@@ -1,6 +1,8 @@
 package com.macrosolution.mpm.carrierservice.service.fedex;
 
+import com.macrosolution.mpm.carrierservice.domain.brt.BrtConfiguration;
 import com.macrosolution.mpm.carrierservice.domain.fedex.FedexConfiguration;
+import com.macrosolution.mpm.carrierservice.domain.paypership.SpedisciOnlineConfiguration;
 import com.macrosolution.mpm.carrierservice.domain.qapla.QaplaConfiguration;
 import com.macrosolution.mpm.carrierservice.dto.request.CancelRequest;
 import com.macrosolution.mpm.carrierservice.dto.request.CustomShipperRequest;
@@ -16,7 +18,9 @@ import com.macrosolution.mpm.carrierservice.dto.response.shipping.PickupResponse
 import com.macrosolution.mpm.carrierservice.dto.response.shipping.ShipmentServiceResponse;
 import com.macrosolution.mpm.carrierservice.dto.response.tracking.TrackingInfo;
 import com.macrosolution.mpm.carrierservice.model.CarrierConfiguration;
+import com.macrosolution.mpm.carrierservice.model.DepartureDeposite;
 import com.macrosolution.mpm.carrierservice.repository.configuration.FedexConfigurationRepository;
+import com.macrosolution.mpm.carrierservice.service.CarrierFactory;
 import com.macrosolution.mpm.carrierservice.service.CarrierService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.config.Registry;
@@ -38,10 +42,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -70,16 +72,43 @@ public class FedexCarrierService implements CarrierService {
         fedexConfiguration.setPassword(configuration.getPassword());
         fedexConfiguration.setClientCode(configuration.getCustomerCode());
         fedexConfiguration.setStoreID(configuration.getStoreId());
-
+        fedexConfiguration.setVirtualShipperType(configuration.getVirtualShipperType());
+        fedexConfiguration.setShipperType(configuration.getCarrierType());
         fedexConfigurationRepository.save(fedexConfiguration);
 
         configuration.setId(fedexConfiguration.getId());
         return configuration;
     }
 
+    // La funzione update viene richiamata ogni volta che provo ad aggiornare la configurazione di un corriere
     @Override
-    public Boolean updateConfiguration(CarrierConfiguration configuration) {
-        return null;
+    public Boolean updateConfiguration(CarrierConfiguration request) {
+        if(request.getDefault()!=null && request.getDefault()){
+            fedexConfigurationRepository.resetDefault(request.getStoreId(), request.getVirtualShipperType());
+        }
+
+        FedexConfiguration fedexConfiguration = fedexConfigurationRepository.findByStoreIDAndVirtualShipperType(request.getStoreId(), request.getVirtualShipperType())
+                .orElse(null);
+
+        if(fedexConfiguration == null){
+            return false;
+        }
+
+        // TODO: verifica che non devi settare il carryer type
+        // penso di no, dato che siamo nella parte di update.
+        // non devi settare nemmeno il virtualshippertype credo, dato che è statico
+
+        if(request.getCustomerCode()!=null)
+            //TODO: verifica che customercode corrisponda al clientcode
+            fedexConfiguration.setClientCode(request.getCustomerCode());
+        if(request.getUsername()!=null)
+            fedexConfiguration.setUsername(request.getUsername());
+        if(request.getPassword()!=null)
+            fedexConfiguration.setPassword(request.getPassword());
+
+        fedexConfigurationRepository.save(fedexConfiguration);
+
+        return true;
     }
 
     @Override
@@ -97,9 +126,52 @@ public class FedexCarrierService implements CarrierService {
         return null;
     }
 
+    // Fa il get della conigurazione salvata corrente, viene chiamato ogni volta che si refresha la pagina di configurazione
     @Override
     public Optional<List<CarrierConfiguration>> getConfigurations(Long storeId, Optional<Integer> type) {
-        return Optional.empty();
+        Optional result;
+        List<FedexConfiguration> conf = new ArrayList<>();
+
+        if(type.isPresent()) {
+            FedexConfiguration fedexConf = fedexConfigurationRepository.findByStoreIDAndVirtualShipperType(storeId, type.get())
+                    .orElse(null);
+
+            if(fedexConf != null) {
+                conf.add(fedexConf);
+            }
+        }
+        else {
+            List<FedexConfiguration> fedexConf = fedexConfigurationRepository.findAllByStoreID(storeId)
+                    .orElse(null);
+            if(fedexConf != null && !fedexConf.isEmpty()){
+                conf.addAll(fedexConf);
+            }
+        }
+
+        List<CarrierConfiguration> response =null;
+        if(!conf.isEmpty()) {
+            response = conf.stream().map(c -> {
+                CarrierConfiguration cc = null;
+                FedexConfiguration fedexConfiguration = (FedexConfiguration) c;
+                cc = new CarrierConfiguration();
+
+                // Customer code == client code (forse nome di variabile usato è non standard, verifica...)
+                cc.setCustomerCode(fedexConfiguration.getClientCode());
+                cc.setUsername(fedexConfiguration.getUsername());
+                cc.setPassword(fedexConfiguration.getPassword());
+                cc.setCarrierType(CarrierFactory.CARRIER_TYPE_FEDEX);
+                cc.setId(fedexConfiguration.getId());
+                cc.setVirtualShipperType(fedexConfiguration.getVirtualShipperType());
+                // TODO: aggiungi anche 'title'
+
+                return cc;
+            }).collect(Collectors.toList());
+            result= Optional.of(response);
+        }else{
+            result = Optional.empty();
+        }
+
+        return result;
     }
 
     @Override

@@ -1,21 +1,28 @@
-<%@ page import="com.macrosolution.mpm.shipper.ShipperType;" contentType="text/html;charset=UTF-8" %>
-
+<%@ page import="com.macrosolution.mpm.store.StoreLimit; com.macrosolution.mpm.claim.StoreLimits; com.macrosolution.mpm.shipper.ShipperType;" contentType="text/html;charset=UTF-8" %>
+<g:set var="maxConfs" value="${2}"/>
+<g:set var="indexToOpen" value="${Long.parseLong(params.confOffset ?: "0")}"/>
+<g:set var="multiLimit" value="${poleepo.getLimit([limit: StoreLimits.MULTI_SHIPPER])}"/>
 
 <g:set var="shipper" value="${shippers && shippers[0] ? shippers[0] : null}" />
 
 <script type="text/javascript">
 
+    $(document).ready(function(){
+        setUpPage();
+    });
+
     // Prodecura di inserimento di una nuova configurazione
-    newFedexConfiguration=function(btn){
-        var idfedex=$("#validfedex").val();
+    newFedexConfiguration=function(btn, index){
+        var idfedex=$("#validfedex" + index).val();
+
         $(btn).ladda().ladda("start");
 
         // anche per brt, il codice cliente sarebbe il 'customer'
-        var fedexClientCode=$("#fedexCustomer").val();
-        var fedexApiKey=$("#fedexUser").val();
-        var fedexSecretKey=$("#fedexPassword").val();
-        var virtualShipperType = $('#virtualShipperType').val();
-        var title = $('#title').val();
+        var fedexClientCode=$("#fedexCustomer" + index).val();
+        var fedexApiKey=$("#fedexUser"+ index).val();
+        var fedexSecretKey=$("#fedexPassword"+ index).val();
+        var virtualShipperType = $('#virtualShipperType'+ index).val();
+        var title = $('#title'+ index).val();
 
         if($("#fedexform").valid() ){
             $.ajax({
@@ -37,7 +44,7 @@
                     $("#validfedex").val(data);
 
                     swal({title:"Salvataggio", text:"Modifiche verificate e salvate con successo", type:"success"},function(){
-                        showTemplate('carriers', 'fedex');
+                        showTemplate('carriers', 'fedex', index);
                         $('#configuration-sda>img').removeClass("grayscale")
                         window["js-switch-sm-fedexdefault" ].enable();
                     });
@@ -55,35 +62,29 @@
 
     // Prcedura di salvataggio generico della configurazione
     // Stabiliamo se dobbiamo aggiornare o inserire una nuova config del corriere
-    saveFedexConfiguration = function(btn) {
+    saveFedexConfiguration = function(btn, index) {
 
         debugger
         debugger
         if(!$('#fedexform').valid())
             return;
 
-        var idfedex=$("#validfedex").val();
+        var idfedex=$("#validfedex" + index).val();
 
         // Se id = 0 dobbiamo creare un nuova configurazione
-        // TODO: qua idfedex è sempre zero e crea ogni volta una nuova confgurazione, trovare problema
-        // TODO: potrebbe ssere perchè nel db non viene salvato shipper_type
         if(idfedex == 0){
-            debugger
-            debugger
-            newFedexConfiguration(btn);
-
+            newFedexConfiguration(btn, index);
         // Altrimenti aggiorniamo la configurazione
         } else {
-
-            debugger
-            debugger
             $(btn).ladda().ladda("start");
             // anche per brt, il codice cliente sarebbe il 'customer'
-            var fedexClientCode=$("#fedexCustomer").val();
-            var fedexApiKey=$("#fedexUser").val();
-            var fedexSecretKey=$("#fedexPassword").val();
-            var virtualShipperType = $('#virtualShipperType').val();
-            var title = $('#title').val();
+            var fedexClientCode=$("#fedexCustomer" + index).val();
+            var fedexApiKey=$("#fedexUser" + index).val();
+            var fedexSecretKey=$("#fedexPassword" + index).val();
+
+            // perchè solo qua ci sono gli apici singoli?
+            var virtualShipperType = $('#virtualShipperType' + index).val();
+            var title = $('#title'+ index).val();
 
             if($("#fedexform").valid() ){
                 $.ajax({
@@ -105,7 +106,7 @@
                         $("#validfedex").val(data);
 
                         swal({title:"Salvataggio", text:"Modifiche verificate e salvate con successo", type:"success"},function(){
-                            showTemplate('carriers', 'fedex');
+                            showTemplate('carriers', 'fedex', index);
                             $('#configuration-sda>img').removeClass("grayscale")
                             window["js-switch-sm-fedexdefault" ].enable();
                         });
@@ -125,6 +126,7 @@
 
 
 </script>
+//TODO: continua da qua ad aggiungere il milti page
 
 <div class="ibox" style="width: 100%">
     <div class="ibox-content">
@@ -172,11 +174,13 @@
                             <input type="hidden" name="virtualShipperType" id="virtualShipperType" value="${shipper?.virtualShipperType ?: ShipperType.getVirtualShipperType(ShipperType.FEDEX , 1)}">
                             <input type="hidden" name="title" id="title" value="${shipper?.title ?: ShipperType.FEDEX}">
 
+                            <p>Shipper id value: ${shipper?.id?:0}</p>
+
                             <!-- Codice Cliente: senderAccID -->
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.customer')}</h3>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <input type="text" name="fedexCustomer" id="fedexCustomer" class="form-control"  value="${shipper?.account_id}"  required="" >
+                                        <input type="text" name="fedexCustomer" id="fedexCustomer" class="form-control"  value="${shipper?.customer}"  required="" >
                                         <span class="input-group-addon">
                                             <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="right" title="Codice cliente"></i>
                                         </span>
@@ -189,7 +193,7 @@
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.user')}</h3>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input type="text" name="fedexUser" id="fedexUser" class="form-control" required="required" value="${shipper?.seatCode}" required="" >
+                                    <input type="text" name="fedexUser" id="fedexUser" class="form-control" required="required" value="${shipper?.username}" required="" >
                                 </div>
                             </div>
                         </div>
@@ -199,7 +203,7 @@
                             <h3 class="col-sm-4">${g.message(code:'shipper.fedexUserConfiguration.password')}</h3>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input type="text" name="fedexPassword" id="fedexPassword" class="form-control" required="required" value="${shipper?.username}"  required="" >
+                                    <input type="text" name="fedexPassword" id="fedexPassword" class="form-control" required="required" value="${shipper?.pswd}"  required="" >
                                 </div>
                             </div>
                         </div>
