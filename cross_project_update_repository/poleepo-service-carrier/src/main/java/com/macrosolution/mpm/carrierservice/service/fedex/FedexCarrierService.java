@@ -69,11 +69,33 @@ public class FedexCarrierService implements CarrierService {
 
         // Prendiamo i parameri necessari dalla richiesta
         fedexConfiguration.setUsername(configuration.getUsername());
+        fedexConfiguration.setTitle(configuration.getTitle());
         fedexConfiguration.setPassword(configuration.getPassword());
         fedexConfiguration.setClientCode(configuration.getCustomerCode());
         fedexConfiguration.setStoreID(configuration.getStoreId());
         fedexConfiguration.setVirtualShipperType(configuration.getVirtualShipperType());
         fedexConfiguration.setShipperType(configuration.getCarrierType());
+
+        // Campi checkati che rispettano la denominazione standard
+        fedexConfiguration.setDepartureDepot(configuration.getSeatCode());
+        fedexConfiguration.setDefaultLabelFormat(configuration.getDefaultLabelFormat());
+        fedexConfiguration.setDefaultTariff(configuration.getDefaultTariff());
+        fedexConfiguration.setOrderIdInNotes(configuration.getOrderIdInNotes());
+
+        if(configuration.getProductTypes() != null) {
+//			List<TntProductType> productTypes = request.getProductTypes().stream().map(it -> {
+//				TntProductType tpt = TntProductType.builder()
+//						.code(it.getCode())
+//						.description(it.getDescription())
+//						.location(it.getDescription())
+//						.configuration(tntConfiguration)
+//						.build();
+//
+//				return tpt;
+//			}).collect(Collectors.toList());
+            fedexConfiguration.setProductTypes(configuration.getProductTypes());
+        }
+
         fedexConfigurationRepository.save(fedexConfiguration);
 
         configuration.setId(fedexConfiguration.getId());
@@ -105,6 +127,29 @@ public class FedexCarrierService implements CarrierService {
             fedexConfiguration.setUsername(request.getUsername());
         if(request.getPassword()!=null)
             fedexConfiguration.setPassword(request.getPassword());
+        if(request.getTitle() != null)
+            fedexConfiguration.setTitle(request.getTitle());
+        if(request.getSeatCode() != null)
+            fedexConfiguration.setDepartureDepot(request.getSeatCode());
+        if(request.getDefaultLabelFormat() != null)
+            fedexConfiguration.setDefaultLabelFormat(request.getDefaultLabelFormat());
+        if(request.getDefaultTariff() != null)
+            fedexConfiguration.setDefaultTariff(request.getDefaultTariff());
+        if(request.getOrderIdInNotes()!=null)
+            fedexConfiguration.setOrderIdInNotes(request.getOrderIdInNotes());
+        if(request.getProductTypes() != null) {
+//			List<TntProductType> productTypes = request.getProductTypes().stream().map(it -> {
+//				TntProductType tpt = TntProductType.builder()
+//						.code(it.getCode())
+//						.description(it.getDescription())
+//						.location(it.getDescription())
+//						.configuration(tntConfiguration)
+//						.build();
+//
+//				return tpt;
+//			}).collect(Collectors.toList());
+            fedexConfiguration.setProductTypes(request.getProductTypes());
+        }
 
         fedexConfigurationRepository.save(fedexConfiguration);
 
@@ -162,6 +207,11 @@ public class FedexCarrierService implements CarrierService {
                 cc.setCarrierType(CarrierFactory.CARRIER_TYPE_FEDEX);
                 cc.setId(fedexConfiguration.getId());
                 cc.setVirtualShipperType(fedexConfiguration.getVirtualShipperType());
+                cc.setSeatCode(fedexConfiguration.getDepartureDepot());
+                cc.setDefaultLabelFormat(fedexConfiguration.getDefaultLabelFormat());
+                cc.setDefaultTariff(fedexConfiguration.getDefaultTariff());
+                cc.setOrderIdInNotes(fedexConfiguration.getOrderIdInNotes());
+                cc.setProductTypes(fedexConfiguration.getProductTypes());
                 // TODO: aggiungi anche 'title'
 
                 return cc;

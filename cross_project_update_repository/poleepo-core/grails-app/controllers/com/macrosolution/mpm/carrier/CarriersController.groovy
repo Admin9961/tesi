@@ -10,6 +10,7 @@ import com.macrosolution.mpm.util.FeatureService
 import com.macrosolution.mpm.utility.log.ILog
 import com.macrosolution.mpm.utility.log.Log
 import com.macrosolution.tntcarriermanager.TntProductType
+import com.macrosolution.mpm.shipper.fedex.FedexProductType
 import grails.converters.JSON
 import grails.plugin.springsecurity.annotation.Secured
 
@@ -358,6 +359,7 @@ class CarriersController {
                 }
             }
             else if (template == 'fedex') {
+                /**
                 shipper = listShipper.get(ShipperType.FEDEX)
                 try {
                     if(shipper != null && shipper[0] != null) {
@@ -370,6 +372,36 @@ class CarriersController {
                     MPMlog.error("Errore durante il recupero dello shipper per FEDEX e store ${storeId}", e)
                 }
                 render template: "/carriers/fedex/configuration", model: [shippers: shipper, shipperType: shipperType]
+                return
+                 */
+
+                /* recupero la lista di servizi nazionali e internazionali */
+                def nationalProductTypes = FedexProductType.getNationalProductTypeList()
+                def internationalProductTypes = FedexProductType.getInternationalProductTypeList()
+
+                /* recupero la lista di servizi nazionali e internazionali presenti nella configurazione */
+                shipper?.each { s ->
+                    def nationalProductTypeStored = []
+                    def internationalProductTypeStored = []
+
+                    Shipper fedexShipper = shipperService.getByCodeAndStoreIdAndVirtualShipperType(ShipperType.FEDEX, storeId, s.virtual_shipper_type)
+
+                    MPMlog.debug("fedexShipper -> ${fedexShipper}")
+
+                    s.shipperDefault = fedexShipper?.shipperDefault ?: false
+                    s.enable = fedexShipper?.enable ?: false
+                    s.virtualShipperType = s.virtual_shipper_type
+
+                    if(s.serviceTypes != null && (s.serviceTypes as List).size() > 0) {
+                        nationalProductTypeStored = FedexProductType.findAllByLocationAndIdInList(FedexProductType.NATIONAL, (s.serviceTypes ?: new ArrayList<>() as List<String>).collect {Long.parseLong(it)})
+                        internationalProductTypeStored = FedexProductType.findAllByLocationAndIdInList(FedexProductType.INTERNATIONAL, (s.serviceTypes ?: new ArrayList<>() as List<String>).collect {Long.parseLong(it)})
+                    }
+                    s.nationalProductTypeStored = nationalProductTypeStored
+                    s.internationalProductTypeStored = internationalProductTypeStored
+                }?.sort {it?.virtualShipperType}
+
+
+                render template: "/carriers/fedex/configuration", model: [shippers: shipper, shipperType: shipperType, nationalProductTypes: nationalProductTypes, internationalProductTypes: internationalProductTypes]
                 return
             }
             else if (template == 'automatic_op') {
