@@ -1,6 +1,7 @@
 package com.macrosolution.mpm.shipper
 
 import com.macrosolution.mpm.marketplace.SourceMP
+import com.macrosolution.mpm.shipper.fedex.FedexProductType
 import com.macrosolution.mpm.store.Store
 import com.macrosolution.mpm.utility.log.Log
 import com.macrosolution.tntcarriermanager.TntProductType
@@ -384,6 +385,22 @@ class ShipperController {
                             tntProductTypeList.add(tntProductType)
                         }
                         params.tntProductTypes = tntProductTypeList
+                    }
+                }
+
+                if(type.type == ShipperType.FEDEX) {
+
+                    MPMlog.debug("sono FEDEX")
+
+                    if (params.getList("productTypes[]") != null) {
+
+                        List<String> codeList = params.getList("productTypes[]")
+                        Set<FedexProductType> fedexProductTypeList = []
+                        codeList?.forEach {
+                            FedexProductType fedexProductType = FedexProductType.findByCode(it.toString())
+                            fedexProductTypeList.add(fedexProductType)
+                        }
+                        params.fedexProductTypes = fedexProductTypeList
                     }
                 }
             }

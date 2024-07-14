@@ -374,6 +374,7 @@ class CarriersController {
                 render template: "/carriers/fedex/configuration", model: [shippers: shipper, shipperType: shipperType]
                 return
                  */
+                shipper = listShipper.get(ShipperType.FEDEX)
 
                 /* recupero la lista di servizi nazionali e internazionali */
                 def nationalProductTypes = FedexProductType.getNationalProductTypeList()

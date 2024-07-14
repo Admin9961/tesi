@@ -7,10 +7,6 @@
 
 <script type="text/javascript">
 
-    $(document).ready(function(){
-        setUpPage();
-    });
-
     let fedex_nationalProductTypeCounter = [];
     let fedex_internationalProductTypeCounter = [];
 
@@ -19,6 +15,22 @@
     fedex_nationalProductTypeCounter.push(${s && s.nationalProductTypeStored ? s.nationalProductTypeStored?.size() : 1})
     fedex_internationalProductTypeCounter.push(${s && s.internationalProductTypeStored ? s.internationalProductTypeStored?.size() : 1})
     </g:each>
+
+    $(document).ready(function(){
+        setUpPage();
+
+        <g:each var="j" in="${0..maxConfs}">
+        <g:set var="shipper" value="${shippers && shippers[j] ? shippers[j] : null}" />
+        if (${nationalProductTypes?.size() == (s && s.nationalProductTypeStored? s.nationalProductTypeStored.size() : 1)}) {
+            $("#fedexAddNationalProductServiceType${j}").hide()
+        };
+
+        if (${internationalProductTypes?.size() == (s && s.internationalProductTypeStored? s.internationalProductTypeStored.size() : 1)}) {
+            $("#fedexAddInternationalProductServiceType${j}").hide()
+        };
+        </g:each>
+
+    })
 
     function fedex_addNationalProductType(supplierIndex) {
         var nationalProductTypeSize = ${nationalProductTypes?.size()}
@@ -53,6 +65,39 @@
         }
     }
 
+    function fedex_addInternationalProductType(supplierIndex) {
+        var internationalProductTypeSize = ${internationalProductTypes?.size()};
+
+        if(internationalProductTypeSize > fedex_internationalProductTypeCounter[supplierIndex]) {
+            $("#internationalNumberProductType" + supplierIndex).val(parseInt($("#internationalNumberProductType" + supplierIndex).val()) + 1)
+
+            fedex_internationalProductTypeCounter[supplierIndex]++;
+
+            $("<div/>", {id: "internationalProductTypeValues" + fedex_internationalProductTypeCounter[supplierIndex] + "" + supplierIndex, class: "row m-t-sm"})
+                .appendTo("#internationalProductTypeForm" + supplierIndex);
+
+            $("<input/>", {type: "hidden", name: "index", value: fedex_internationalProductTypeCounter[supplierIndex]})
+                .appendTo("#internationalProductTypeValues" + fedex_internationalProductTypeCounter[supplierIndex] + "" + supplierIndex);
+
+            $("<div/>", {class: "col-sm-10"})
+                .append($("<div/>", {class: "input-group"})
+                    .append($("<select/>", {class: "form-control", name: "internationalProductType[]" + supplierIndex})
+                        <g:each var="opt" in="${internationalProductTypes}">
+                            .append($("<option/>", {value: "${opt.code}", text: "${opt.description}"}))
+                        </g:each>))
+                .appendTo("#internationalProductTypeValues" + fedex_internationalProductTypeCounter[supplierIndex] + "" + supplierIndex);
+
+            $("<div/>", {class: "col-sm-2"})
+                .append($("<a/>", {onclick: "fedex_deleteInternationalProductType(" + fedex_internationalProductTypeCounter[supplierIndex] + "," + supplierIndex + ")"})
+                    .append($("<i/>", {class: "fa fa-trash fa-2x"}))
+                ).appendTo("#internationalProductTypeValues" + fedex_internationalProductTypeCounter[supplierIndex] + "" + supplierIndex);
+        }
+
+        if (internationalProductTypeSize === fedex_internationalProductTypeCounter[supplierIndex]) {
+            $("#fedexAddInternationalProductServiceType" + supplierIndex).hide()
+        }
+    }
+
     function fedex_deleteNationalProductType(index, supplierIndex) {
         var value = parseInt($("#nationalNumberProductType" + supplierIndex).val());
         // if(value > 1) {
@@ -60,6 +105,16 @@
         $("#nationalNumberProductType" + supplierIndex).val(value - 1);
         fedex_nationalProductTypeCounter[supplierIndex] -= 1
         $("#fedexAddNationalProductServiceType" + supplierIndex).show()
+        // }
+    }
+
+    function fedex_deleteInternationalProductType(index, supplierIndex) {
+        var value = parseInt($("#internationalNumberProductType" + supplierIndex).val());
+        // if(value > 1) {
+        $("#internationalProductTypeValues" + index + "" + supplierIndex).remove();
+        $("#internationalNumberProductType" + supplierIndex).val(value - 1);
+        fedex_internationalProductTypeCounter[supplierIndex] -= 1
+        $("#fedexAddInternationalProductServiceType" + supplierIndex).show()
         // }
     }
 
@@ -80,6 +135,25 @@
         var defaultTariff=$("#defaultTariffFedex" + index).val();
         var orderIdInNotes=$('#orderIdInNotesFedex' + index).is(':checked');
 
+        // Lista servizi di spedizione nazionali e internazionali
+        var productTypeList = [];
+        $.each($('#fedexform' + index).serializeArray(), function(i, field) {
+            if (field.name === ("nationalProductType[]" + index) || field.name === ("internationalProductType[]" + index))
+                debugger
+                debugger
+                productTypeList.push(field.value);
+        });
+
+        if(productTypeList.length == 0) {
+            swal({
+                title: "Errore",
+                text: "Seleziona almeno un servizio di spedizione.",
+                type: "error"
+            });
+            $(btn).ladda("stop");
+            return
+        }
+
             $.ajax({
                 url: "${createLink(controller: 'shipper', action:'save' )}",
                 method: 'POST',
@@ -97,6 +171,7 @@
                     'fedexUserConfiguration.defaultLabelFormat':defaultLabelFormat,
                     'fedexUserConfiguration.defaultTariff':defaultTariff,
                     'fedexUserConfiguration.orderIdInNotes': orderIdInNotes,
+                    'productTypes[]': productTypeList,
                     storeID:${session['store_id']}
                 },
                 success: function(data){
@@ -122,9 +197,6 @@
     // Prcedura di salvataggio generico della configurazione
     // Stabiliamo se dobbiamo aggiornare o inserire una nuova config del corriere
     saveFedexConfiguration = function(btn, index) {
-
-        debugger
-        debugger
         if(!$('#fedexform'+ index).valid())
             return;
 
@@ -132,13 +204,9 @@
 
         // Se id = 0 dobbiamo creare un nuova configurazione
         if(idfedex == 0){
-            debugger
-            debugger
             newFedexConfiguration(btn, index);
         // Altrimenti aggiorniamo la configurazione
         } else {
-            debugger
-            debugger
             $(btn).ladda().ladda("start");
             // anche per brt, il codice cliente sarebbe il 'customer'
             var fedexClientCode=$("#fedexCustomer" + index).val();
@@ -148,6 +216,25 @@
             var defaultLabelFormat=$("#defaultLabelFormatFedex" + index).val();
             var defaultTariff=$("#defaultTariffFedex" + index).val();
             var orderIdInNotes=$('#orderIdInNotesFedex' + index).is(':checked');
+
+            // Lista servizi di spedizione nazionali e internazionali
+            var productTypeList = [];
+            $.each($('#fedexform' + index).serializeArray(), function(i, field) {
+                if (field.name === ("nationalProductType[]" + index) || field.name === ("internationalProductType[]" + index))
+                    productTypeList.push(field.value);
+                debugger
+                debugger
+            });
+
+            if(productTypeList.length == 0) {
+                swal({
+                    title: "Errore",
+                    text: "Seleziona almeno un servizio di spedizione.",
+                    type: "error"
+                });
+                $(btn).ladda("stop");
+                return
+            }
 
             // perchè solo qua ci sono gli apici singoli?
             var virtualShipperType = $('#virtualShipperType' + index).val();
@@ -170,7 +257,7 @@
                         'fedexUserConfiguration.defaultLabelFormat':defaultLabelFormat,
                         'fedexUserConfiguration.defaultTariff':defaultTariff,
                         'fedexUserConfiguration.orderIdInNotes': orderIdInNotes,
-
+                        'productTypes[]': productTypeList,
                         storeID:${session['store_id']}
                     },
                     success: function(data){
