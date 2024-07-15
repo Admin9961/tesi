@@ -211,7 +211,10 @@ public class FedexCarrierService implements CarrierService {
                 cc.setDefaultLabelFormat(fedexConfiguration.getDefaultLabelFormat());
                 cc.setDefaultTariff(fedexConfiguration.getDefaultTariff());
                 cc.setOrderIdInNotes(fedexConfiguration.getOrderIdInNotes());
-                cc.setProductTypes(fedexConfiguration.getProductTypes());
+
+                // Anche se lavoriamo su productTypes, quando ritorniamo al frontend la variabile
+                // ritorniamo servicetypes (altrimenti non funziona)
+                cc.setServiceTypes(fedexConfiguration.getProductTypes());
                 // TODO: aggiungi anche 'title'
 
                 return cc;
