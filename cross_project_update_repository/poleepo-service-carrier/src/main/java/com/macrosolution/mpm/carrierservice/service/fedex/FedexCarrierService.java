@@ -81,6 +81,13 @@ public class FedexCarrierService implements CarrierService {
         fedexConfiguration.setDefaultLabelFormat(configuration.getDefaultLabelFormat());
         fedexConfiguration.setDefaultTariff(configuration.getDefaultTariff());
         fedexConfiguration.setOrderIdInNotes(configuration.getOrderIdInNotes());
+        fedexConfiguration.setCheckBookingForm(configuration.getCheckBookingForm());
+        fedexConfiguration.setPriopntime(configuration.getPriopntime());
+        fedexConfiguration.setPriclotime(configuration.getPriclotime());
+        fedexConfiguration.setSecopntime(configuration.getSecopntime());
+        fedexConfiguration.setSecclotime(configuration.getSecclotime());
+        fedexConfiguration.setPickuptime(configuration.getPickuptime());
+        fedexConfiguration.setAvailabilitytime(configuration.getAvailabilitytime());
 
         if(configuration.getProductTypes() != null) {
 //			List<TntProductType> productTypes = request.getProductTypes().stream().map(it -> {
@@ -150,6 +157,22 @@ public class FedexCarrierService implements CarrierService {
 //			}).collect(Collectors.toList());
             fedexConfiguration.setProductTypes(request.getProductTypes());
         }
+            if(request.getCheckBookingForm() != null)
+                fedexConfiguration.setCheckBookingForm(request.getCheckBookingForm());
+            if(request.getPriopntime() != null)
+                fedexConfiguration.setPriopntime(request.getPriopntime());
+            if(request.getPriclotime() != null)
+                fedexConfiguration.setPriclotime(request.getPriclotime());
+            if(request.getSecopntime() != null)
+                fedexConfiguration.setSecopntime(request.getSecopntime());
+            if(request.getSecclotime() != null)
+                fedexConfiguration.setSecclotime(request.getSecclotime());
+            if(request.getPickuptime() != null)
+                fedexConfiguration.setPickuptime(request.getPickuptime());
+            if(request.getAvailabilitytime() != null)
+                fedexConfiguration.setAvailabilitytime(request.getAvailabilitytime());
+            if(request.getPickuptime() != null)
+                fedexConfiguration.setPickuptime(request.getPickuptime());
 
         fedexConfigurationRepository.save(fedexConfiguration);
 
@@ -215,6 +238,14 @@ public class FedexCarrierService implements CarrierService {
                 // Anche se lavoriamo su productTypes, quando ritorniamo al frontend la variabile
                 // ritorniamo servicetypes (altrimenti non funziona)
                 cc.setServiceTypes(fedexConfiguration.getProductTypes());
+                cc.setCheckBookingForm(fedexConfiguration.getCheckBookingForm());
+                cc.setPriopntime(fedexConfiguration.getPriopntime());
+                cc.setPriclotime(fedexConfiguration.getPriclotime());
+                cc.setSecopntime(fedexConfiguration.getSecopntime());
+                cc.setSecclotime(fedexConfiguration.getSecclotime());
+                cc.setPickuptime(fedexConfiguration.getPickuptime());
+                cc.setAvailabilitytime(fedexConfiguration.getAvailabilitytime());
+
                 // TODO: aggiungi anche 'title'
 
                 return cc;

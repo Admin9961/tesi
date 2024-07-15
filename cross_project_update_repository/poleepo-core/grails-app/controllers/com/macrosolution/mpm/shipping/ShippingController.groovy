@@ -21,6 +21,7 @@ import com.macrosolution.mpm.store.Store
 import com.macrosolution.mpm.utility.log.ILog
 import com.macrosolution.mpm.utility.log.Log
 import com.macrosolution.tntcarriermanager.TntProductType
+import com.macrosolution.mpm.shipper.fedex.FedexProductType
 import grails.converters.JSON
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang3.StringUtils
@@ -958,14 +959,18 @@ class ShippingController {
                 //def shipperConfs = shipperService.getConfigurations(session["store_id"]);
                 def fedexconf = s // shipperConfs.get(ShipperType.BRT)
                 //def countryCode = shippingService.getCountryCodeFromSource(order?.source)
+
+                // producttypes non può mei essere vuoto, dato che nella configurazione sono obbligato a selezionare almeno un servizio
+                def productTypes = FedexProductType.findAllByIdInList(fedexconf.serviceTypes as List<Long>)
+
                 if (params.shipping_id) {
                     MPMlog.debug("entra nell'if")
 //                    def shipping = shippingService.get(params.getLong('shipping_id'))
-                    render template: 'shippingFedexForm', model: [shipping: shipping, conf: fedexconf, orderId: ""]
+                    render template: 'shippingFedexForm', model: [shipping: shipping, conf: fedexconf, orderId: "", productTypes: productTypes, parcelWidth: parcelWidth, parcelHeight: parcelHeight, parcelDepth: parcelDepth, totalOrder: (order.totalOrder + (order.codCost ?: 0)), totalWeight: totalWeight]
                 } else {
-                    MPMlog.debug("entra nell'else")
+                    MPMlog.debug("entra nell'else")\
                     //TODO: aggiungere parmetri aggiuntivi
-                    render template: 'shippingFedexForm', model: [shipping: shipping, conf: fedexconf, orderId: ""]
+                    render template: 'shippingFedexForm', model: [shipping: shipping, conf: fedexconf, orderId: "", productTypes: productTypes, parcelWidth: parcelWidth, parcelHeight: parcelHeight, parcelDepth: parcelDepth, totalOrder: (order.totalOrder + (order.codCost ?: 0)), totalWeight: totalWeight]
                 }
             }
             else if (type == ShipperType.DHL) {

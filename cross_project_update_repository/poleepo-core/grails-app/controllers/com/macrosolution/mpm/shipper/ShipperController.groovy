@@ -215,6 +215,15 @@ class ShipperController {
 
         /* se ho fedex */
         else if (type.type == ShipperType.FEDEX) {
+
+            params.fedexUserConfiguration.checkBookingForm = params.fedexUserConfiguration.checkBookingForm.toBoolean()
+            if (params.fedexUserConfiguration.priopntime) params.fedexUserConfiguration.priopntime = Date.parse('HH:mm', params.fedexUserConfiguration.priopntime)
+            if (params.fedexUserConfiguration.priclotime) params.fedexUserConfiguration.priclotime = Date.parse('HH:mm', params.fedexUserConfiguration.priclotime)
+            if (params.fedexUserConfiguration.secopntime) params.fedexUserConfiguration.secopntime = Date.parse('HH:mm', params.fedexUserConfiguration.secopntime)
+            if (params.fedexUserConfiguration.secclotime) params.fedexUserConfiguration.secclotime = Date.parse('HH:mm', params.fedexUserConfiguration.secclotime)
+            if (params.fedexUserConfiguration.availabilitytime) params.fedexUserConfiguration.availabilitytime = Date.parse('HH:mm', params.fedexUserConfiguration.availabilitytime)
+            if (params.fedexUserConfiguration.pickuptime) params.fedexUserConfiguration.pickuptime = Date.parse('HH:mm', params.fedexUserConfiguration.pickuptime)
+
             shipper = shipperService.getByVirtualShipperTypeAndStoreId(virtualShipperType, storeId) ?: new Shipper()
             shipper.properties = params
 
@@ -391,6 +400,14 @@ class ShipperController {
                 if(type.type == ShipperType.FEDEX) {
 
                     MPMlog.debug("sono FEDEX")
+
+                    params.fedexUserConfiguration.checkBookingForm = params.fedexUserConfiguration.checkBookingForm.toBoolean()
+                    if (params.fedexUserConfiguration.priopntime) params.fedexUserConfiguration.priopntime = Date.parse('HH:mm', params.fedexUserConfiguration.priopntime)
+                    if (params.fedexUserConfiguration.priclotime) params.fedexUserConfiguration.priclotime = Date.parse('HH:mm', params.fedexUserConfiguration.priclotime)
+                    if (params.fedexUserConfiguration.secopntime) params.fedexUserConfiguration.secopntime = Date.parse('HH:mm', params.fedexUserConfiguration.secopntime)
+                    if (params.fedexUserConfiguration.secclotime) params.fedexUserConfiguration.secclotime = Date.parse('HH:mm', params.fedexUserConfiguration.secclotime)
+                    if (params.fedexUserConfiguration.availabilitytime) params.fedexUserConfiguration.availabilitytime = Date.parse('HH:mm', params.fedexUserConfiguration.availabilitytime)
+                    if (params.fedexUserConfiguration.pickuptime) params.fedexUserConfiguration.pickuptime = Date.parse('HH:mm', params.fedexUserConfiguration.pickuptime)
 
                     if (params.getList("productTypes[]") != null) {
 

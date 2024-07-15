@@ -19,6 +19,18 @@
     $(document).ready(function(){
         setUpPage();
 
+        $('.clockpicker').clockpicker()
+        $('.clockpicker').on('blur',function(event){
+            $(event.target).valid()
+        })
+        $('.input-group.date').datepicker({
+            todayBtn: "linked",
+            keyboardNavigation: false,
+            forceParse: false,
+            autoclose: true,
+            format: "dd/mm/yyyy"
+        });
+
         <g:each var="j" in="${0..maxConfs}">
         <g:set var="shipper" value="${shippers && shippers[j] ? shippers[j] : null}" />
         if (${nationalProductTypes?.size() == (s && s.nationalProductTypeStored? s.nationalProductTypeStored.size() : 1)}) {
@@ -28,9 +40,27 @@
         if (${internationalProductTypes?.size() == (s && s.internationalProductTypeStored? s.internationalProductTypeStored.size() : 1)}) {
             $("#fedexAddInternationalProductServiceType${j}").hide()
         };
+
+        if ($("#checkBookingForm${j}").prop("checked")) {
+            $("#bookingForm${j}").hide();
+        };
         </g:each>
 
     })
+
+    displayBookingForm=function(index) {
+        var checkBox = document.getElementById("checkBookingForm" + index);
+        var bookingForm = document.getElementById("bookingForm" + index);
+        if (checkBox.checked == false){
+            bookingForm.style.display = "block";
+        } else {
+            bookingForm.style.display = "none";
+        }
+    }
+
+    changeZindex=function(){
+        $(".popover").css("z-index", 2100);
+    }
 
     function fedex_addNationalProductType(supplierIndex) {
         var nationalProductTypeSize = ${nationalProductTypes?.size()}
@@ -134,6 +164,13 @@
         var defaultLabelFormat=$("#defaultLabelFormatFedex" + index).val();
         var defaultTariff=$("#defaultTariffFedex" + index).val();
         var orderIdInNotes=$('#orderIdInNotesFedex' + index).is(':checked');
+        var checkBookingForm=$("#checkBookingForm" + index).is(':checked')
+        var priopntime=$("#priopntime" + index).val();
+        var priclotime=$("#priclotime" + index).val();
+        var secopntime=$("#secopntime" + index).val();
+        var secclotime=$("#secclotime" + index).val();
+        var availabilitytime=$("#availabilitytime" + index).val();
+        var pickuptime=$("#pickuptime" + index).val();
 
         // Lista servizi di spedizione nazionali e internazionali
         var productTypeList = [];
@@ -171,6 +208,13 @@
                     'fedexUserConfiguration.defaultLabelFormat':defaultLabelFormat,
                     'fedexUserConfiguration.defaultTariff':defaultTariff,
                     'fedexUserConfiguration.orderIdInNotes': orderIdInNotes,
+                    'fedexUserConfiguration.checkBookingForm': checkBookingForm,
+                    'fedexUserConfiguration.priopntime':priopntime,
+                    'fedexUserConfiguration.priclotime' :priclotime,
+                    'fedexUserConfiguration.secopntime':secopntime,
+                    'fedexUserConfiguration.secclotime':secclotime,
+                    'fedexUserConfiguration.availabilitytime':availabilitytime,
+                    'fedexUserConfiguration.pickuptime':pickuptime,
                     'productTypes[]': productTypeList,
                     storeID:${session['store_id']}
                 },
@@ -216,6 +260,13 @@
             var defaultLabelFormat=$("#defaultLabelFormatFedex" + index).val();
             var defaultTariff=$("#defaultTariffFedex" + index).val();
             var orderIdInNotes=$('#orderIdInNotesFedex' + index).is(':checked');
+            var checkBookingForm=$("#checkBookingForm" + index).is(':checked')
+            var priopntime=$("#priopntime" + index).val();
+            var priclotime=$("#priclotime" + index).val();
+            var secopntime=$("#secopntime" + index).val();
+            var secclotime=$("#secclotime" + index).val();
+            var availabilitytime=$("#availabilitytime" + index).val();
+            var pickuptime=$("#pickuptime" + index).val();
 
             // Lista servizi di spedizione nazionali e internazionali
             var productTypeList = [];
@@ -258,6 +309,13 @@
                         'fedexUserConfiguration.defaultTariff':defaultTariff,
                         'fedexUserConfiguration.orderIdInNotes': orderIdInNotes,
                         'productTypes[]': productTypeList,
+                        'fedexUserConfiguration.checkBookingForm': checkBookingForm,
+                        'fedexUserConfiguration.priopntime':priopntime,
+                        'fedexUserConfiguration.priclotime' :priclotime,
+                        'fedexUserConfiguration.secopntime':secopntime,
+                        'fedexUserConfiguration.secclotime':secclotime,
+                        'fedexUserConfiguration.availabilitytime':availabilitytime,
+                        'fedexUserConfiguration.pickuptime':pickuptime,
                         storeID:${session['store_id']}
                     },
                     success: function(data){
@@ -420,6 +478,12 @@
                                 <hr/>
                                 <!-- Tipo spedizione -->
                                 <div class="row m-t-sm">
+                                    <div class="col-sm-12">
+                                        <h3>Tipo spedizione</h3>
+                                        <p class="text-justify">Seleziona i servizi di spedizione di FEDEX.</p>
+                                    </div>
+                                </div>
+                                <div class="row m-t-sm">
                                     <div class="col-sm-6">
                                         Servizi nazionali
                                         <div id="nationalProductTypeForm${indice}">
@@ -479,8 +543,82 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <hr/>
+
+                                <!-- Ritiro programmato -->
+                                <div class="row" style="margin-top:5px;">
+                                    <div class=" col-sm-4">
+                                        <h3>Hai già un ritiro programmato?</h3>
+                                    </div>
+                                    <div class=" col-md-8 " style="text-align:left;">
+                                        <a data-toggle="tooltip" data-placement="right" title="Indicaci se hai già un ritiro programmato." >
+                                            <input  id="checkBookingForm${indice}" type="checkbox" class="form-control js-switch-green" value="${shipper?.checkBookingForm}" onchange="displayBookingForm(${indice})" ${shipper?.checkBookingForm?'checked':""} />
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div id="bookingForm${indice}">
+                                    <div class="row" style="margin-top:5px;">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.priopntime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.priopntime" id ="priopntime${indice}" class="form-control" data-autoclose="true"  value="${shipper?.priopntime}" onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.priclotime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.priclotime" id="priclotime${indice}" class="form-control" value="${shipper?.priclotime}"  onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.secopntime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.secopntime" id="secopntime${indice}" class="form-control" value="${shipper?.secopntime}"  onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.secclotime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.secclotime" id="secclotime${indice}" class="form-control" value="${shipper?.secclotime}"  onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.availabilitytime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.availabilitytime" id="availabilitytime${indice}" class="form-control" value="${shipper?.availabilitytime}"  onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label>${g.message(code:'tntBooking.pickuptime')}</label>
+                                                <div class="input-group clockpicker" data-autoclose="true">
+                                                    <span class="input-group-addon"><i class="fa fa-clock"></i></span>
+                                                    <input type="text" name="fedexUserConfiguration.pickuptime" id="pickuptime${indice}" class="form-control" value="${shipper?.pickuptime}"  onclick="changeZindex()" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                             </form>
 
