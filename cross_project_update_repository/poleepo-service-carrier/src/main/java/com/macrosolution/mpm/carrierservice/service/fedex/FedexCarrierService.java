@@ -52,7 +52,7 @@ public class FedexCarrierService implements CarrierService {
     @Autowired
     private FedexConfigurationRepository fedexConfigurationRepository;
 
-    // URL verso cui inviare le richieste
+    // URL verso cui inviare le richieste di auth
     public static String AUTH_API_URL = "https://apis-sandbox.fedex.com/oauth/token";
 
     @Override

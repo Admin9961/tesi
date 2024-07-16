@@ -10,6 +10,8 @@
 
 <script type="text/javascript">
 
+    let contatoreParcel = 0;
+
     $(document).ready(function(){
         changeLocation()
     })
@@ -153,7 +155,7 @@ function changeLocation() {
                 </label>
                 <div class="col-sm-9">
                     <div class="input-group">
-                        <g:select class="form-control" name="nationalProductType" id="FEDEXShippingProductType_${shipId}" value="${shipping?.productType?.code}"
+                        <g:select class="form-control" name="nationalProductType" id="FEDEXShippingProductType_${shipId}" value="${shipping?.fedexProductType?.code}"
                                   from="${productTypes.findAll {it.location == FedexProductType.NATIONAL}}"
                                   optionValue="description" optionKey="code" required="required"/>
                     </div>
@@ -168,7 +170,7 @@ function changeLocation() {
                 </label>
                 <div class="col-sm-9">
                     <div class="input-group">
-                        <g:select class="form-control" name="internationalProductType" id="FEDEXShippingIntProductType_${shipId}" value="${shipping?.productType?.code}"
+                        <g:select class="form-control" name="internationalProductType" id="FEDEXShippingIntProductType_${shipId}" value="${shipping?.fedexProductType?.code}"
                                   from="${productTypes.findAll {it.location == FedexProductType.INTERNATIONAL}}"
                                   optionValue="description" optionKey="code" required="required"/>
                     </div>
@@ -261,4 +263,75 @@ function changeLocation() {
     </div>
 </div>
 
-test value
+<!-- Toggle della visualizzazione o meno del contrassegno -->
+<div class="row">
+    <div class="col-sm-12">
+        <a onclick="$('#ShippingCodValue_${shipId}').val('');$(this).children().toggle();$('#codContainer_${shipId}').slideToggle()">
+            <span style="${shipping?.codValue || pay_method == 'COD' ? "display:none" : ""}">Imposta Contrassegno</span>
+            <span style="${shipping?.codValue || pay_method == 'COD' ? "" : "display:none"}">Rimuovi Contrassegno</span>
+        </a>
+    </div>
+</div>
+
+<!-- Dati del contrassegno -->
+<div class="row" id="codContainer_${shipId}" style="${shipping?.codValue || pay_method == 'COD' ? "" : "display:none"}">
+
+    <!-- Valore del contrassegno -->
+    <div class="col-sm-6">
+        <label for="ShippingCodValue_${shipId}">
+            Valore contrassegno
+        </label>
+        <div class="input-group">
+            <input type="number" name="codValue" step="0.01" min="0" id="ShippingCodValue_${shipId}" value="${pay_method == 'COD' ? totalOrder : shipping?.codValue}" class="form-control m-r"/>
+        </div>
+    </div>
+
+    <!-- Commissioni -->
+    <div class="col-sm-6">
+        <label for="ShippingCodCommission_${shipId}">
+            Commissioni a carico di
+        </label>
+        <div class="input-group">
+            <select name="codCommission" id="ShippingCodCommission_${shipId}" class="form-control">
+                <option value="R" ${shipping?.codCommission=="R"?"selected":""}>Destinatario</option>
+                <option value="S" ${shipping?.codCommission=="S"?"selected":""}>Mittente</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Toggle della visualizzazione o meno dell'assicurazione -->
+<div class="row">
+    <div class="col-sm-12">
+        <a onclick="$('#ShippingInsuranceValue_${shipId}').val('');$(this).children().toggle();$('#insuranceContainer_${shipId}').slideToggle()">
+            <span  style="${shipping?.insuredValue?'display:none':''}">Imposta Assicurazione</span>
+            <span  style="${shipping?.insuredValue?'':'display:none'}">Rimuovi Assicurazione</span>
+        </a>
+    </div>
+</div>
+
+<!-- Dati dell'assicurazione -->
+<div class="row" id="insuranceContainer_${shipId}" style="${shipping?.insuredValue ? '' : 'display:none'}">
+    <!-- Valore assicurato -->
+    <div class="col-sm-6">
+        <label for="ShippingInsuranceValue_${shipId}">
+            Valore assicurato
+        </label>
+        <div class="input-group">
+            <input type="number" name="insuredValue" step="0.01" min="0" id="ShippingInsuranceValue_${shipId}" value="${shipping?.insuredValue}" class="form-control"/>
+        </div>
+    </div>
+
+    <!-- Commissioni -->
+    <div class="col-sm-6">
+        <label for="ShippingCodValue_${shipId}">
+            Commissioni a carico di
+        </label>
+        <div class="input-group">
+            <select name="insuranceCommission" id="ShippinginsuranceCommission_${shipId}" class="form-control">
+                <option value="S" ${shipping?.insuranceCommission=="S"?"selected":""}>Mittente</option>
+                <option value="R" ${shipping?.insuranceCommission=="R"?"selected":""}>Destinatario</option>
+            </select>
+        </div>
+    </div>
+</div>

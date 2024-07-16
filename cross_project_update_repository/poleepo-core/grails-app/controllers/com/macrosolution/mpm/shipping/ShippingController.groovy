@@ -22,6 +22,7 @@ import com.macrosolution.mpm.utility.log.ILog
 import com.macrosolution.mpm.utility.log.Log
 import com.macrosolution.tntcarriermanager.TntProductType
 import com.macrosolution.mpm.shipper.fedex.FedexProductType
+import com.macrosolution.mpm.shipping.fedex.FedexBooking
 import grails.converters.JSON
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang3.StringUtils
@@ -285,6 +286,37 @@ class ShippingController {
             }
 
 
+        }
+
+        if(shipper.type.type == ShipperType.FEDEX) {
+            shipping = new FedexShipping(params)
+
+            //TODO: capire cos'è numberpackage e se includerlo
+//            shipping.numberPackage = params.getLong('numberPackage')
+
+            shipping.tntApplication = params.get("tnt_application")
+
+            def shipperConf = shipperService.getConfiguration(storeId, virtualShipperType as Long)
+
+            if(shipperConf.checkBookingForm == false){
+                shipping.fedexBooking = new FedexBooking()
+                shipping.fedexBooking.pickupdate = new Date()
+                if(shipperConf.priopntime) shipping.fedexBooking.priopntime = Date.parse('HH:mm', shipperConf.priopntime)
+                if(shipperConf.priclotime) shipping.fedexBooking.priclotime = Date.parse('HH:mm', shipperConf.priclotime)
+                if(shipperConf.secopntime) shipping.fedexBooking.secopntime = Date.parse('HH:mm', shipperConf.secopntime)
+                if(shipperConf.secclotime) shipping.fedexBooking.secclotime = Date.parse('HH:mm', shipperConf.secclotime)
+                if(shipperConf.availabilitytime) shipping.fedexBooking.availabilitytime = Date.parse('HH:mm', shipperConf.availabilitytime)
+                if(shipperConf.pickuptime) shipping.fedexBooking.pickuptime = Date.parse('HH:mm', shipperConf.pickuptime)
+            }
+
+            if (shipping.tntApplication == "MYRTL") {
+                FedexProductType productType = FedexProductType.findByCode(params.get("nationalProductType") as String)
+                shipping.fedexProductType = productType
+            }
+            else {
+                FedexProductType productType = FedexProductType.findByCode(params.get("internationalProductType") as String)
+                shipping.fedexProductType = productType
+            }
         }
 
         shipping.pickupAddress = storeLocation
@@ -960,7 +992,7 @@ class ShippingController {
                 def fedexconf = s // shipperConfs.get(ShipperType.BRT)
                 //def countryCode = shippingService.getCountryCodeFromSource(order?.source)
 
-                // producttypes non può mei essere vuoto, dato che nella configurazione sono obbligato a selezionare almeno un servizio
+                // producttypes non può mai essere vuoto, dato che nella configurazione sono obbligato a selezionare almeno un servizio
                 def productTypes = FedexProductType.findAllByIdInList(fedexconf.serviceTypes as List<Long>)
 
                 if (params.shipping_id) {
