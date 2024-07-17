@@ -186,6 +186,8 @@ public class FedexCarrierService implements CarrierService {
 
     @Override
     public CreateShippingResponse pdfLabel(PdfLabelRequest request) throws Exception {
+
+        log.debug("chiamata arrivata al pdflabel");
         return null;
     }
 

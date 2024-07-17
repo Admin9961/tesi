@@ -32,4 +32,9 @@ class FedexShipping extends Shipping {
             return fedexProductType.description
         return "Express"
     }
+
+    @Override
+    boolean useCarrierService() {
+        return true
+    }
 }

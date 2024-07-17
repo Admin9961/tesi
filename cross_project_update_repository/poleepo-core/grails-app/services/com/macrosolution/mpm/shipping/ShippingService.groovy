@@ -1511,8 +1511,8 @@ class ShippingService {
                           town: StringUtility.removeNonAscii(shipping.pickupAddress.city), province:shipping.pickupAddress.province, name:StringUtility.removeNonAscii(shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name),
                           contactname: StringUtility.removeNonAscii(shipping.pickupAddress.nomeCompleto?:shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name),
                           country: shipping.pickupAddress.country],
-                        
-                        [addressType:"R", addrline1:StringUtility.removeNonAscii(shipping.receiverAddress.address), postcode:shipping.receiverAddress.zipCode, phone1:phoneR?.take(3), phone2:phoneR?.drop(3), 
+
+                        [addressType:"R", addrline1:StringUtility.removeNonAscii(shipping.receiverAddress.address), postcode:shipping.receiverAddress.zipCode, phone1:phoneR?.take(3), phone2:phoneR?.drop(3),
                           town: StringUtility.removeNonAscii(shipping.receiverAddress.city), province:shipping.receiverAddress.province, name:StringUtility.removeNonAscii(shipping.receiverAddress.ragioneSociale?:shipping.receiverAddress.customer?.toString()),
                           contactname: StringUtility.removeNonAscii(shipping.receiverAddress.nomeCompleto?:shipping.receiverAddress.ragioneSociale?:shipping.receiverAddress.store?.name),
                           country: shipping.receiverAddress.country]
@@ -2299,48 +2299,69 @@ class ShippingService {
         else if (shipping instanceof FedexShipping) {
             // Costruisco la richiesta xml da inviare al backend
 
+            MPMlog.debug("shipping service instanceof fedex")
+            //TODO: verifica che tutti i parametri siano corretti
             Map fedexXmlParams = [
                     customerReference: shipping.id,
                     //specialInstructions: shipping.notes.join(),
+
                     outputType:shipping.outputType,
                     totalpackages:shipping.numberPackage,
+                    actualWeight:(shipping.parcels.weight.sum()*1000 as Long).toString().padLeft(8, "0"),
+                    totalpackages:shipping.numberPackage,
+
+                    //specialInstructions: shipping.notes?.join()?:"",
+
+                    productType:shipping.fedexProductType?.code?:"",
+                    tntApplication:shipping.tntApplication,
                     addresses:[
-                            [addressType:"P", addrline1:shipping.pickupAddress.address, postcode:shipping.pickupAddress.zipCode, phone1:phoneP, country:shipping.pickupAddress.country,
-                             town:shipping.pickupAddress.city, province:shipping.pickupAddress.province,
-                             name:shipping.pickupAddress.nomeCompleto?:shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name,
-                             email:shipping.pickupAddress.email, fiscalCode:shipping.pickupAddress.vatNumber?:shipping.pickupAddress.cf,
-                             contactname:shipping.pickupAddress.nomeCompleto?:shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name],
+                            [addressType:"S", addrline1:shipping.senderAddress.address, postcode:shipping.senderAddress.zipCode, phone1:phoneS?.take(3),phone2:phoneS?.drop(3),
+                             town: shipping.senderAddress.city, province:shipping.senderAddress.province, name:shipping.senderAddress.ragioneSociale?:shipping.senderAddress.store?.name,
+                             contactname: shipping.senderAddress.nomeCompleto?:shipping.senderAddress.ragioneSociale?:shipping.senderAddress.store?.name,
+                             country: shipping.senderAddress.country],
 
-                            [addressType:"R", addrline1:shipping.receiverAddress.address, postcode:shipping.receiverAddress.zipCode, phone1:phoneR, country:shipping.receiverAddress.country,
-                             town:shipping.receiverAddress.city, province:shipping.receiverAddress.province, name:shipping.receiverAddress.ragioneSociale?:shipping.receiverAddress.customer?.toString(),
-                             email:shipping.receiverAddress.email, fiscalCode:shipping.receiverAddress.vatNumber?:shipping.receiverAddress.cf, contactname:shipping.receiverAddress.customer?.toString()],
+                            [addressType:"C", addrline1:StringUtility.removeNonAscii(shipping.pickupAddress.address), postcode:shipping.pickupAddress.zipCode, phone1:phoneC?.take(3),phone2:phoneC?.drop(3),
+                             town: StringUtility.removeNonAscii(shipping.pickupAddress.city), province:shipping.pickupAddress.province, name:StringUtility.removeNonAscii(shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name),
+                             contactname: StringUtility.removeNonAscii(shipping.pickupAddress.nomeCompleto?:shipping.pickupAddress.ragioneSociale?:shipping.pickupAddress.store?.name),
+                             country: shipping.pickupAddress.country],
 
-                            [addressType:"S", addrline1:shipping.senderAddress.address, postcode:shipping.senderAddress.zipCode, phone1:phoneS, country:shipping.senderAddress.country,
-                             town:shipping.senderAddress.city, province:shipping.senderAddress.province, name:shipping.senderAddress.ragioneSociale?:shipping.pickupAddress.store?.name,
-                             email:shipping.senderAddress.email, fiscalCode: shipping.senderAddress.vatNumber?:shipping.senderAddress.cf,
-                             contactname:shipping.senderAddress.nomeCompleto?:shipping.senderAddress.ragioneSociale?:shipping.senderAddress.store?.name]
+                            [addressType:"R", addrline1:StringUtility.removeNonAscii(shipping.receiverAddress.address), postcode:shipping.receiverAddress.zipCode, phone1:phoneR?.take(3), phone2:phoneR?.drop(3),
+                             town: StringUtility.removeNonAscii(shipping.receiverAddress.city), province:shipping.receiverAddress.province, name:StringUtility.removeNonAscii(shipping.receiverAddress.ragioneSociale?:shipping.receiverAddress.customer?.toString()),
+                             contactname: StringUtility.removeNonAscii(shipping.receiverAddress.nomeCompleto?:shipping.receiverAddress.ragioneSociale?:shipping.receiverAddress.store?.name),
+                             country: shipping.receiverAddress.country]
                     ],
-                    dimensions:shipping.parcels.collect{[weight:(it.weight*1000 as Long).toString().padLeft(8, "0"),
-                                                         width:it.width?((it.width*1000 as Long).toString().padLeft(8, "0")):null,
-                                                         height:it.height?((it.height*1000 as Long).toString().padLeft(8, "0")):null,
-                                                         depth:it.depth?((it.depth*1000 as Long).toString().padLeft(8, "0")):null,
-                                                         itemtype:it.boxType.value]},
+                    dimensions:shipping.parcels.collect{[
+                            weight:(it.weight*1000 as Long).toString().padLeft(8, "0"),
+                            width:it.width?((it.width*1000 as Long).toString().padLeft(6, "0")):null,
+                            height:it.height?((it.height*1000 as Long).toString().padLeft(6, "0")):null,
+                            depth:it.depth?((it.depth*1000 as Long).toString().padLeft(6, "0")):null,
+                            itemtype:it.boxType.value
+                    ]},
                     insuredValue: shipping.insuredValue,
                     codValue:shipping.codValue,
-                    codCommission:shipping.codType,
-                    content: shipping.content
+                    customerReference: shipping.orders?.reference?.join("; "),
+                    insuranceCommission:shipping.insuranceCommission,
+                    codValue:shipping.codValue,
+                    codCommission:shipping.codCommission
+
+                    //TODO: verifica se devi includere anche questi parametri (non credo)
+                    //codCommission:shipping.codType,
+                    //content: shipping.content
             ]
 
-            //TODO: sistemare in base alla tabella shipping
             fedexXmlParams.collectiontrg = [
-                    availabilitytime: shipping.dhlBooking?.availabilitytime?.format('HH:mm'),
-                    secclotime: shipping.dhlBooking?.secclotime?.format('HH:mm'),
-                    pickupdate: shipping.dhlBooking?.pickupdate?.format('yyyy-MM-dd'),
-                    pickupinstr: shipping.dhlBooking?.pickupinstr,
-                    packageLocation: shipping.dhlBooking?.packageLocation
+                    priopntime: shipping.fedexBooking?.priopntime?.format('HHmm'),
+                    priclotime: shipping.fedexBooking?.priclotime?.format('HHmm'),
+                    secopntime: shipping.fedexBooking?.secopntime?.format('HHmm'),
+                    secclotime: shipping.fedexBooking?.secclotime?.format('HHmm'),
+                    availabilitytime: shipping.fedexBooking?.availabilitytime?.format('HHmm'),
+                    pickupdate: shipping.fedexBooking?.pickupdate?.format('dd.MM.yyyy'),
+                    pickuptime:shipping.fedexBooking?.pickuptime?.format('HHmm'),
+                    pickupinstr: shipping.fedexBooking?.pickupinstr
+
             ]
 
-            dhlXmlParams.ldv = shipping.shippingCode
+            fedexXmlParams.ldv = shipping.shippingCode
 
             fedexXmlParams.carrierType = 30;
 
